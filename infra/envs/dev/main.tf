@@ -46,3 +46,11 @@ module "app_service" {
   container_image = var.container_image
   container_port  = 80
 }
+module "key_vault" {
+  source         = "../../modules/key_vault"
+  key_vault_name = "kv-dev"
+  location       = var.location
+  resource_group = azurerm_resource_group.main.name
+  secret_name    = "SqlPassword"
+  secret_value   = var.sql_admin_password
+}
