@@ -27,7 +27,7 @@ module "monitoring" {
 }
 
 module "sql" {
-  source         = "../../modules/sql"
+  source         = "../../modules/sql_db"
   server_name    = "sqlsrvdev"
   db_name        = "sqldbdev"
   admin_user     = var.sql_admin_user
@@ -45,12 +45,23 @@ module "app_service" {
   resource_group  = azurerm_resource_group.main.name
   container_image = var.container_image
   container_port  = 80
+  key_vault_id    = module.key_vault.id                          # Assuming module.key_vault outputs its ID
+  tenant_id       = data.azurerm_client_config.current.tenant_id # Assuming you have this data source
+
+  app_settings = {
+    "ConnectionStrings__DefaultConnection" = "@Microsoft.KeyVault(SecretUri=${module.key_vault.secret_uri})"
+    "WEBSITES_PORT"                        = "3000"
+    "NODE_ENV"                             = "production"
+    "WEBSITES_ENABLE_APP_SERVICE_STORAGE"  = "false" # Add this if you want it applied
+  }
 }
+
 module "key_vault" {
   source         = "../../modules/key_vault"
   key_vault_name = "kv-dev"
   location       = var.location
   resource_group = azurerm_resource_group.main.name
-  secret_name    = "SqlPassword"
-  secret_value   = var.sql_admin_password
+  secret_name    = "DbConnectionString"
+  secret_value   = "Server=tcp:sqlsrvdev.database.windows.net,1433;Initial Catalog=sqldbdev;Persist Security Info=False;User ID=sqladmin;Password=${var.sql_admin_password};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
 }
+

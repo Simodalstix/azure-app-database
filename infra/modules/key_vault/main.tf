@@ -6,7 +6,6 @@ resource "azurerm_key_vault" "kv" {
   sku_name            = "standard"
 }
 
-
 data "azurerm_client_config" "current" {}
 
 resource "azurerm_key_vault_secret" "sql_password" {
